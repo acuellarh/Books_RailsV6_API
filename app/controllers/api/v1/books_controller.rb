@@ -10,8 +10,9 @@ module Api
       end
     
       def create
-        #some logic
-        book = Book.new(book_params)
+        #binding.irb
+        author = Author.create!(author_params)
+        book = Book.new(book_params.merge(author_id: author.id))
     
         if book.save
           render json: book, status: :created
@@ -27,9 +28,13 @@ module Api
       end
     
       private
+
+      def author_params
+        params.require(:author).permit(:first_name, :lastname, :age)
+      end
     
       def book_params
-        params.require(:book).permit(:title, :author)    
+        params.require(:book).permit(:title)    
       end
     end
     
