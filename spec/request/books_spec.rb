@@ -1,19 +1,38 @@
 require 'rails_helper'
 
 describe 'Books API', type: :request do 
+  let(:first_author) {FactoryBot.create(:author, first_name: 'George', last_name: 'Orwell', age: 46 )}
+  let(:second_author) {FactoryBot.create(:author, first_name: 'H.G', last_name: 'Wells', age: 78 )}
 
   describe 'GET /books' do 
-    
+
     before do
-      FactoryBot.create(:book, title: '1984', author: 'George Oewel')
-      FactoryBot.create(:book, title: 'The time machine', author: 'H.G Wells')  
+      FactoryBot.create(:book, title: '1984', author: first_author )
+      FactoryBot.create(:book, title: 'The time machine', author: second_author )  
     end
 
     it 'returns all books' do  
       get '/api/v1/books'
       
       expect(response).to have_http_status(:success)
-      expect(JSON.parse(response.body).size).to eq(2)
+      expect(response_body.size).to eq(2)
+      expect(response_body).to eq(
+       [
+          {
+            'id' => 1,
+            'title' => '1984',
+            'author_name' => 'George Orwell',
+            'author_age' => 46
+          },
+          {
+            'id' => 2,
+            'title' => 'The time machine',
+            'author_name' => 'H.G Wells',
+            'author_age' => 78
+          }
+
+        ]
+      )
     end
   end
 
@@ -22,17 +41,25 @@ describe 'Books API', type: :request do
       expect {
         post '/api/v1/books', params: { 
           book: { title: 'The Martian' },
-          author: { first_name: 'Andy', last_name: 'Weir', age: '48' }
+          author: { first_name: 'Andy', last_name: 'Weir',  age: '48'  }
          }
       }.to change { Book.count }.from(0).to(1)
 
       expect(response).to have_http_status(:created)
       expect(Author.count).to eq(1)
+      expect(JSON.parse(response.body)).to eq(
+        {
+          'id' => 1,
+          'title' => 'The Martian',
+          'author_name' => 'Andy Weir',
+          'author_age' => 48
+        }
+      )
     end
   end
 
   describe 'DELETE /books' do
-    let!(:book) { book = FactoryBot.create(:book, title: '1984', author: 'George Oewel') }
+    let!(:book) { book = FactoryBot.create(:book, title: '1984', author: first_author ) }
 
     it 'deletes a book' do
 
